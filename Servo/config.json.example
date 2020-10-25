@@ -1,0 +1,10 @@
+﻿{
+	"token": "<token here>",
+	"prefix": "!",
+	"owner": "<owner id>",
+	"lavalink": {
+		"host": "<host>",
+		"port": "<port>",
+		"password": "<password>"
+	}
+}

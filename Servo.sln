@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30611.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Servo", "Servo\Servo.csproj", "{B2427B53-0FDB-442E-8CDF-F1F0F39D42BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B2427B53-0FDB-442E-8CDF-F1F0F39D42BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2427B53-0FDB-442E-8CDF-F1F0F39D42BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2427B53-0FDB-442E-8CDF-F1F0F39D42BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2427B53-0FDB-442E-8CDF-F1F0F39D42BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4E90449B-74ED-4AFC-A385-CE937C231D57}
+	EndGlobalSection
+EndGlobal
