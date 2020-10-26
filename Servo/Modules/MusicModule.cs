@@ -264,6 +264,41 @@ namespace Servo.Modules
             await ReplyAsync($"🔁 Now replaying **{player.CurrentTrack.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**. 🔁").ConfigureAwait(false);
         }
 
+        [Command("seek", RunMode = RunMode.Async)]
+        public async Task Seek(TimeSpan seekPosition)
+        {
+            var player = await GetPlayerAsync(false).ConfigureAwait(false);
+            if (player == null)
+            {
+                return;
+            }
+
+            var track = player.CurrentTrack;
+            if (track == null)
+            {
+                await ReplyAsync("🤔 Nothing is playing to seek! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            var previous = player.TrackPosition;
+            if (previous == seekPosition)
+            {
+                await ReplyAsync("🤔 Track is at current position! 🤔").ConfigureAwait(false);
+                return;
+            }
+            
+            var emoji = seekPosition > previous ? "⏩" : "⏪";
+            await player.SeekPositionAsync(seekPosition).ConfigureAwait(false);
+            var current = player.TrackPosition;
+            await ReplyAsync($"{emoji} Seeked from **[**`{previous:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]** to **[**`{current:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]**. {emoji}").ConfigureAwait(false);
+        }
+
+        [Command("seekto", RunMode = RunMode.Async)]
+        public async Task SeekTo(TimeSpan seekPosition)
+        {
+
+        }
+
         [Command("shuffle", RunMode = RunMode.Async)]
         public async Task Shuffle()
         {
