@@ -284,8 +284,8 @@ namespace Servo.Modules
             }
         }
 
-        [Command("skip", RunMode = RunMode.Async)]
-        public async Task Skip()
+        [Command("forceskip", RunMode = RunMode.Async)]
+        public async Task ForceSkip()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
             if (player == null)
