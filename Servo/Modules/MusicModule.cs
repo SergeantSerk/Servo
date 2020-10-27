@@ -287,6 +287,12 @@ namespace Servo.Modules
             }
 
             var previous = player.TrackPosition;
+            if (previous + seekDuration >= track.Duration)
+            {
+                await ReplyAsync("❌ Cannot seek from current position to beyond the end of track! ❌").ConfigureAwait(false);
+                return;
+            }
+
             var seeked = player.TrackPosition + seekDuration;
             var emoji = seeked > previous ? "⏩" : "⏪";
 
@@ -318,7 +324,7 @@ namespace Servo.Modules
             }
 
             var duration = current - previous;
-            await Seek(duration).ConfigureAwait(false);
+            await SeekBy(duration).ConfigureAwait(false);
         }
 
         [Command("shuffle", RunMode = RunMode.Async)]
