@@ -37,19 +37,9 @@ namespace Servo.TypeReaders
                 input = input.Replace("-", "");
             }
 
-            if (TimeSpan.TryParseExact(input.ToLowerInvariant(), Formats, CultureInfo.InvariantCulture, out var timeSpan))
-            {
-                if (negate)
-                {
-                    timeSpan = timeSpan.Negate();
-                }
-
-                return Task.FromResult(TypeReaderResult.FromSuccess(timeSpan));
-            }
-            else
-            {
-                return Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Failed to parse TimeSpan"));
-            }
+            return TimeSpan.TryParseExact(input.ToLowerInvariant(), Formats, CultureInfo.InvariantCulture, out var timeSpan) ?
+                   Task.FromResult(TypeReaderResult.FromSuccess(negate ? timeSpan.Negate() : timeSpan)) :
+                   Task.FromResult(TypeReaderResult.FromError(CommandError.ParseFailed, "Failed to parse TimeSpan"));
         }
     }
 }
