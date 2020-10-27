@@ -34,7 +34,7 @@ namespace Servo.Services
             _commandPrefix = commandPrefix;
             _services = services;
 
-            //_commands.AddTypeReader<Uri>(new UriTypeReader());
+            _commands.AddTypeReader<TimeSpan>(new TimeSpanTypeReader());
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
             // Add additional initialization code here...
         }
