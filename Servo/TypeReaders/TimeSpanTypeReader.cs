@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace Servo.TypeReaders
 {
+    // Currently Discord.Net does not parse a negative TimeSpan as expected so temporarily,
+    // it is implemented as a TypeReader until the fork is merged with the update.
+    // https://github.com/discord-net/Discord.Net/blob/dev/src/Discord.Net.Commands/Readers/TimeSpanTypeReader.cs
     internal class TimeSpanTypeReader : TypeReader
     {
-        // https://github.com/discord-net/Discord.Net/blob/dev/src/Discord.Net.Commands/Readers/TimeSpanTypeReader.cs
         private static readonly string[] Formats = {
             "%d'd'%h'h'%m'm'%s's'", //4d3h2m1s
             "%d'd'%h'h'%m'm'",      //4d3h2m
