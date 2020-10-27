@@ -264,6 +264,75 @@ namespace Servo.Modules
             await ReplyAsync($"🔁 Now replaying **{player.CurrentTrack.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**. 🔁").ConfigureAwait(false);
         }
 
+        [Command("seekby", RunMode = RunMode.Async)]
+        public async Task SeekBy(TimeSpan seekDuration)
+        {
+            var player = await GetPlayerAsync(false).ConfigureAwait(false);
+            if (player == null)
+            {
+                return;
+            }
+
+            var track = player.CurrentTrack;
+            if (track == null)
+            {
+                await ReplyAsync("🤔 Nothing is playing to seek! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            if (!track.IsSeekable)
+            {
+                await ReplyAsync("❌ Cannot seek this track! ❌").ConfigureAwait(false);
+                return;
+            }
+
+            if (seekDuration.Ticks == 0)
+            {
+                await ReplyAsync("🤔 Track is at current position! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            var previous = player.TrackPosition;
+            if (previous + seekDuration >= track.Duration)
+            {
+                await ReplyAsync("❌ Cannot seek from current position to beyond the end of track! ❌").ConfigureAwait(false);
+                return;
+            }
+
+            var seeked = player.TrackPosition + seekDuration;
+            var emoji = seeked > previous ? "⏩" : "⏪";
+
+            await player.SeekPositionAsync(seeked).ConfigureAwait(false);
+            await ReplyAsync($"{emoji} Seeked from **[**`{previous:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]** to **[**`{seeked:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]**. {emoji}").ConfigureAwait(false);
+        }
+
+        [Command("seekto", RunMode = RunMode.Async)]
+        public async Task SeekTo(TimeSpan current)
+        {
+            var player = await GetPlayerAsync(false).ConfigureAwait(false);
+            if (player == null)
+            {
+                return;
+            }
+
+            var track = player.CurrentTrack;
+            if (track == null)
+            {
+                await ReplyAsync("🤔 Nothing is playing to seek! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            var previous = player.TrackPosition;
+            if (previous == current)
+            {
+                await ReplyAsync("🤔 Track is at current position! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            var duration = current - previous;
+            await SeekBy(duration).ConfigureAwait(false);
+        }
+
         [Command("shuffle", RunMode = RunMode.Async)]
         public async Task Shuffle()
         {
