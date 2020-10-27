@@ -280,6 +280,12 @@ namespace Servo.Modules
                 return;
             }
 
+            if (!track.IsSeekable)
+            {
+                await ReplyAsync("❌ Cannot seek this track! ❌").ConfigureAwait(false);
+                return;
+            }
+
             if (seekDuration.Ticks == 0)
             {
                 await ReplyAsync("🤔 Track is at current position! 🤔").ConfigureAwait(false);
