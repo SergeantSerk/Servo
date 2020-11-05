@@ -206,12 +206,19 @@ namespace Servo.Modules
 
             var current = player.CurrentTrack;
 
+            // TO-DO: make this customisable (and below 2000 chars per Discord limit)
+            var max = 10;
             var message = $"**Playing:** **{current.Title}** **[**`{player.TrackPosition:hh\\:mm\\:ss}`**/**`{current.Duration:hh\\:mm\\:ss}`**]**\n";
-            for (int i = 0; i < player.Queue.Count; ++i)
+            for (int i = 0; i < Math.Min(player.Queue.Count, max); ++i)
             {
                 var symbol = i + 1 == player.Queue.Count ? "└" : "├";
                 var track = player.Queue[i];
                 message += $"{symbol}   **{i + 1}.** **{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**\n";
+            }
+
+            if (max > player.Queue.Count)
+            {
+                message += $"🎶 **And more queued up...** 🎶";
             }
 
             await ReplyAsync(message).ConfigureAwait(false);
@@ -353,8 +360,8 @@ namespace Servo.Modules
             }
         }
 
-        [Command("forceskip", RunMode = RunMode.Async)]
-        public async Task ForceSkip()
+        [Command("skip", RunMode = RunMode.Async)]
+        public async Task Skip()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
             if (player == null)
@@ -365,6 +372,46 @@ namespace Servo.Modules
             if (player.CurrentTrack == null)
             {
                 await ReplyAsync("🤔 There is nothing playing to skip! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            var info = await player.VoteAsync(Context.Message.Author.Id).ConfigureAwait(false);
+            if (info.WasAdded && !info.WasSkipped)
+            {
+                await ReplyAsync($"🗳 Vote skip was cast for **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+            }
+            else if (!info.WasAdded && info.WasSkipped)
+            {
+                await ReplyAsync($"🗳 Skipped track **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+            }
+            else if (info.WasAdded && info.WasSkipped)
+            {
+                await ReplyAsync($"🗳 Your vote was added and skipped **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+            }
+            else
+            {
+                await ReplyAsync($"🗳 There was a problem voting for **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+            }
+        }
+
+        [Command("forceskip", RunMode = RunMode.Async)]
+        public async Task ForceSkip(int count = 1)
+        {
+            var player = await GetPlayerAsync(false).ConfigureAwait(false);
+            if (player == null)
+            {
+                return;
+            }
+
+            if (player.CurrentTrack == null)
+            {
+                await ReplyAsync("🤔 There is nothing playing to skip! 🤔").ConfigureAwait(false);
+                return;
+            }
+
+            if (count < 1)
+            {
+                await ReplyAsync("❌ Cannot skip less than 1 track! ❌").ConfigureAwait(false);
                 return;
             }
 
@@ -422,7 +469,7 @@ namespace Servo.Modules
                 await ReplyAsync("⚠️ Volume greater than 100% can damage the ears, be careful! ⚠️").ConfigureAwait(false);
             }
 
-            await player.SetVolumeAsync(volume / 100f, true).ConfigureAwait(false);
+            await player.SetVolumeAsync(volume / 100f).ConfigureAwait(false);
             await ReplyAsync($"{emoji} Volume **{(volume > previous ? "increased" : "decreased")}** to **{volume}%**. {emoji}").ConfigureAwait(false);
         }
 
