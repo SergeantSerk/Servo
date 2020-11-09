@@ -5,6 +5,7 @@ using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
 using Lavalink4NET.Player;
 using Lavalink4NET.Rest;
+using Servo.Builders;
 
 namespace Servo.Modules
 {
@@ -38,7 +39,7 @@ namespace Servo.Modules
             }
 
             await player.StopAsync(true).ConfigureAwait(false);
-            await ReplyAsync("👋 Bye bye. 👋").ConfigureAwait(false);
+            await ReplyAsync($"👋 {new MarkdownBuilder("Bye Bye!").Bold()} 👋").ConfigureAwait(false);
         }
 
         [Alias("np")]
@@ -59,28 +60,30 @@ namespace Servo.Modules
             var track = player.CurrentTrack;
             if (track == null || player.State == PlayerState.NotPlaying)
             {
-                await ReplyAsync("🤔 Nothing is playing! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Nothing is playing!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
             else if (player.State == PlayerState.NotConnected)
             {
-                await ReplyAsync("🤔 Bot is not connected, join and request a song! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Bot is not connected, join and request a song!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
             else if (player.State == PlayerState.Destroyed)
             {
-                await ReplyAsync("❌ Cannot connect to voice chat, connection is destroyed! ❌").ConfigureAwait(false);
+                await ReplyAsync($"❌ {new MarkdownBuilder("Cannot connect to voice chat, connection is destroyed!").Bold()} ❌").ConfigureAwait(false);
                 player.Dispose();
                 return;
             }
 
-            var message = $"**{track.Title}** " +
-                          $"**[**" +
-                          $"{(showTrackInfo ? $"`{player.TrackPosition:hh\\:mm\\:ss}`**/**" : "")}" +
-                          $"`{track.Duration:hh\\:mm\\:ss}`" +
-                          $"**]**";
+            var message = new MarkdownBuilder(track.Title).Bold()
+                  .Append(new MarkdownBuilder("[").Bold(), true)
+                  .Append(showTrackInfo ? new MarkdownBuilder($"{player.TrackPosition:hh\\:mm\\:ss}").SingleCodeBlock()
+                                  .Append(new MarkdownBuilder(" | ").Bold()) : new MarkdownBuilder())
+                  .Append(new MarkdownBuilder($"{track.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                  .Append(new MarkdownBuilder("]").Bold());
+
             var emoji = player.State == PlayerState.Playing ? "▶️" : "⏸️";
-            await ReplyAsync($"{emoji} Now playing {message} 🎶").ConfigureAwait(false);
+            await ReplyAsync($"{emoji} {message} {emoji}").ConfigureAwait(false);
         }
 
         [Command("pause", RunMode = RunMode.Async)]
@@ -89,12 +92,12 @@ namespace Servo.Modules
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
             if (player == null)
             {
-                await ReplyAsync("🤔 Nothing is playing! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Nothing is playing!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
 
             await player.PauseAsync().ConfigureAwait(false);
-            await ReplyAsync("⏸️ Paused. ⏸️").ConfigureAwait(false);
+            await ReplyAsync($"⏸️ {new MarkdownBuilder("Paused.").Bold()} ⏸️").ConfigureAwait(false);
         }
 
         [Command("play", RunMode = RunMode.Async)]
@@ -112,12 +115,12 @@ namespace Servo.Modules
 
             if (loadInfo.LoadType == TrackLoadType.LoadFailed)
             {
-                await ReplyAsync("❌ Something went wrong when loading this. ❌").ConfigureAwait(false);
+                await ReplyAsync($"❌ {new MarkdownBuilder("Something went wrong when loading this.").Bold()} ❌").ConfigureAwait(false);
                 return;
             }
             else if (loadInfo.LoadType == TrackLoadType.NoMatches || tracks == null || tracks.Length == 0)
             {
-                await ReplyAsync("❌ No results matching those terms. ❌").ConfigureAwait(false);
+                await ReplyAsync($"❌ {new MarkdownBuilder("No results matching those terms.").Bold()} ❌").ConfigureAwait(false);
                 return;
             }
 
@@ -125,7 +128,11 @@ namespace Servo.Modules
                 loadInfo.LoadType == TrackLoadType.SearchResult)
             {
                 var track = tracks[0];
-                var message = $"**{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**";
+                //var message = $"**{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**";
+                var message = new MarkdownBuilder(track.Title).Bold()
+                      .Append(new MarkdownBuilder("[").Bold(), true)
+                      .Append(new MarkdownBuilder($"{track.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                      .Append(new MarkdownBuilder("]").Bold());
                 var position = await player.PlayAsync(track, enqueue: true).ConfigureAwait(false);
                 if (position == 0)
                 {
@@ -133,7 +140,7 @@ namespace Servo.Modules
                 }
                 else
                 {
-                    await ReplyAsync($"🎶 Added {message} to queue (position **{position}**). 🎶").ConfigureAwait(false);
+                    await ReplyAsync($"🎶 Added {message} to queue (position {new MarkdownBuilder(position).Bold()}). 🎶").ConfigureAwait(false);
                 }
             }
             else if (loadInfo.LoadType == TrackLoadType.PlaylistLoaded)
@@ -147,7 +154,8 @@ namespace Servo.Modules
                     ++added;
                 }
 
-                await ReplyAsync($"🎶 Playlist **{loadInfo.PlaylistInfo.Name}** with **{added}** tracks added to queue. 🎶").ConfigureAwait(false);
+                await ReplyAsync($"🎶 Playlist {new MarkdownBuilder(loadInfo.PlaylistInfo.Name).Bold()} " +
+                                 $"with {new MarkdownBuilder(added).Bold()} tracks added to queue. 🎶").ConfigureAwait(false);
             }
         }
 
@@ -166,17 +174,24 @@ namespace Servo.Modules
             {
                 if (player.State == PlayerState.Paused)
                 {
-                    await ReplyAsync($"▶️ Resuming **{track.Title}** **[**`{player.TrackPosition:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]** ▶️").ConfigureAwait(false);
+                    //var message = $"**{track.Title}** **[**`{player.TrackPosition:hh\\:mm\\:ss}`**/**`{track.Duration:hh\\:mm\\:ss}`**]**";
+                    var message = new MarkdownBuilder(track.Title).Bold()
+                          .Append(new MarkdownBuilder("[").Bold(), true)
+                          .Append(new MarkdownBuilder($"{player.TrackPosition:hh\\:mm\\:ss}").SingleCodeBlock())
+                          .Append(new MarkdownBuilder(" | ").Bold())
+                          .Append(new MarkdownBuilder($"{track.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                          .Append(new MarkdownBuilder("]").Bold());
+                    await ReplyAsync($"▶️ Resuming {message} ▶️").ConfigureAwait(false);
                     await player.ResumeAsync().ConfigureAwait(false);
                 }
                 else if (player.State == PlayerState.Playing)
                 {
-                    await ReplyAsync($"🤔 Already playing **{track.Title}** 🤔").ConfigureAwait(false);
+                    await ReplyAsync($"🤔 Already playing {new MarkdownBuilder(track.Title).Bold()} 🤔").ConfigureAwait(false);
                 }
             }
             else
             {
-                await ReplyAsync("⚠️ No music in queue! ⚠️").ConfigureAwait(false);
+                await ReplyAsync($"⚠️ {new MarkdownBuilder("No music in queue!").Bold()} ⚠️").ConfigureAwait(false);
             }
         }
 
@@ -199,19 +214,39 @@ namespace Servo.Modules
                 }
                 else
                 {
-                    await ReplyAsync($"🤔 Queue is empty, go play something! 🤔").ConfigureAwait(false);
+                    await ReplyAsync($"🤔 {new MarkdownBuilder("Queue is empty, go play something!").Bold()} 🤔").ConfigureAwait(false);
                     return;
                 }
             }
 
             var current = player.CurrentTrack;
+            var message = new MarkdownBuilder("Playing:").Bold()
+                  .Append(new MarkdownBuilder(current.Title).Bold(), true)
+                  .Append(new MarkdownBuilder("[").Bold(), true)
+                  .Append(new MarkdownBuilder($"{player.TrackPosition:hh\\:mm\\:ss}").SingleCodeBlock())
+                  .Append(new MarkdownBuilder(" | ").Bold())
+                  .Append(new MarkdownBuilder($"{current.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                  .Append(new MarkdownBuilder("]").Bold()) +
+                  "\n";
 
-            var message = $"**Playing:** **{current.Title}** **[**`{player.TrackPosition:hh\\:mm\\:ss}`**/**`{current.Duration:hh\\:mm\\:ss}`**]**\n";
-            for (int i = 0; i < player.Queue.Count; ++i)
+            // TO-DO: make this customisable (and below 2000 chars per Discord limit)
+            var max = 10;
+            for (int i = 0; i < Math.Min(player.Queue.Count, max); ++i)
             {
                 var symbol = i + 1 == player.Queue.Count ? "└" : "├";
                 var track = player.Queue[i];
-                message += $"{symbol}   **{i + 1}.** **{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**\n";
+                //message += $"{symbol}   **{i + 1}.** **{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**\n";
+                message += new MarkdownBuilder($"{symbol}   ")
+                   .Append(new MarkdownBuilder($"{i + 1}.").Bold(), true)
+                   .Append(new MarkdownBuilder(track.Title).Bold(), true)
+                   .Append(new MarkdownBuilder("[").Bold(), true)
+                   .Append(new MarkdownBuilder($"{track.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                   .Append(new MarkdownBuilder("]").Bold());
+            }
+
+            if (player.Queue.Count > max)
+            {
+                message += $"\n🎶 {new MarkdownBuilder("And more queued up...").Bold()} 🎶";
             }
 
             await ReplyAsync(message).ConfigureAwait(false);
@@ -229,18 +264,18 @@ namespace Servo.Modules
 
             if (player.CurrentTrack == null)
             {
-                await ReplyAsync("🤔 Nothing is playing to repeat! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Nothing is playing to repeat!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
 
             player.IsLooping = !player.IsLooping;
             if (player.IsLooping)
             {
-                await ReplyAsync($"🔂 Now repeating **{player.CurrentTrack.Title}**. 🔂").ConfigureAwait(false);
+                await ReplyAsync($"🔂 Now repeating {new MarkdownBuilder(player.CurrentTrack.Title).Bold()}. 🔂").ConfigureAwait(false);
             }
             else
             {
-                await ReplyAsync($"➡️ No longer repeating **{player.CurrentTrack.Title}**. ➡️").ConfigureAwait(false);
+                await ReplyAsync($"➡️ No longer repeating {new MarkdownBuilder(player.CurrentTrack.Title).Bold()}. ➡️").ConfigureAwait(false);
             }
         }
 
@@ -256,12 +291,16 @@ namespace Servo.Modules
             var track = player.CurrentTrack;
             if (track == null)
             {
-                await ReplyAsync("🤔 Nothing is playing to replay! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Nothing is playing to replay!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
 
             await player.ReplayAsync().ConfigureAwait(false);
-            await ReplyAsync($"🔁 Now replaying **{player.CurrentTrack.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**. 🔁").ConfigureAwait(false);
+            var message = new MarkdownBuilder(player.CurrentTrack.Title).Bold()
+                  .Append(new MarkdownBuilder("[").Bold(), true)
+                  .Append(new MarkdownBuilder($"{track.Duration:hh\\:mm\\:ss}").SingleCodeBlock())
+                  .Append(new MarkdownBuilder("]").Bold());
+            await ReplyAsync($"🔁 Now replaying {message} 🔁").ConfigureAwait(false);
         }
 
         [Command("shuffle", RunMode = RunMode.Async)]
@@ -275,12 +314,12 @@ namespace Servo.Modules
 
             if (player.Queue.IsEmpty)
             {
-                await ReplyAsync("🤔 No music in queue to shuffle! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("No music in queue to shuffle!").Bold()} 🤔").ConfigureAwait(false);
             }
             else
             {
                 player.Queue.Shuffle();
-                await ReplyAsync("🔀 Queue shuffled! 🔀").ConfigureAwait(false);
+                await ReplyAsync($"🔀 {new MarkdownBuilder("Queue shuffled!").Bold()} 🔀").ConfigureAwait(false);
             }
         }
 
@@ -295,12 +334,12 @@ namespace Servo.Modules
 
             if (player.CurrentTrack == null)
             {
-                await ReplyAsync("🤔 There is nothing playing to skip! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("There is nothing playing to skip!").Bold()} 🤔").ConfigureAwait(false);
                 return;
             }
 
             await player.SkipAsync().ConfigureAwait(false);
-            await ReplyAsync($"⏭️ Skipping **{player.CurrentTrack.Title}**... ⏭️").ConfigureAwait(false);
+            await ReplyAsync($"⏭️ Skipping {new MarkdownBuilder(player.CurrentTrack.Title).Bold()}... ⏭️").ConfigureAwait(false);
         }
 
         [Command("stop", RunMode = RunMode.Async)]
@@ -317,20 +356,24 @@ namespace Servo.Modules
 
             if (track == null)
             {
-                await ReplyAsync("🤔 Nothing playing! 🤔").ConfigureAwait(false);
+                await ReplyAsync($"🤔 {new MarkdownBuilder("Nothing playing!").Bold()} 🤔").ConfigureAwait(false);
             }
             else
             {
-                await ReplyAsync($"⏹️ Stopped playing **{track.Title}**. ⏹️").ConfigureAwait(false);
+                await ReplyAsync($"⏹️ Stopped playing {new MarkdownBuilder(track.Title).Bold()} ⏹️").ConfigureAwait(false);
             }
         }
 
         [Command("volume", RunMode = RunMode.Async)]
         public async Task Volume(int volume = 100)
         {
-            if (volume > 1000 || volume < 0)
+            // TO-DO: make this dynamic/settable in config
+            var min = 0;
+            var max = 1000;
+            if (volume > max || volume < min)
             {
-                await ReplyAsync("⚠️ Volume must be between **0%** and **1000%!** ⚠️").ConfigureAwait(false);
+                await ReplyAsync($"⚠️ Volume must be between {new MarkdownBuilder($"{min}%").Bold()} " +
+                                 $"and {new MarkdownBuilder($"{max}%!").Bold()} ⚠️").ConfigureAwait(false);
                 return;
             }
 
@@ -344,17 +387,18 @@ namespace Servo.Modules
             var emoji = volume == 0 ? "🔈" : volume < 100 ? "🔉" : "🔊";
             if (previous == volume)
             {
-                await ReplyAsync($"{emoji} No changes made to the volume. {emoji}").ConfigureAwait(false);
+                await ReplyAsync($"{emoji} {new MarkdownBuilder("No changes made to the volume.").Bold()} {emoji}").ConfigureAwait(false);
                 return;
             }
 
             if (volume > 100)
             {
-                await ReplyAsync("⚠️ Volume greater than 100% can damage the ears, be careful! ⚠️").ConfigureAwait(false);
+                await ReplyAsync($"⚠️ {new MarkdownBuilder("Volume greater than 100% can damage the ears, be careful!").Bold()} ⚠️").ConfigureAwait(false);
             }
 
             await player.SetVolumeAsync(volume / 100f, true).ConfigureAwait(false);
-            await ReplyAsync($"{emoji} Volume **{(volume > previous ? "increased" : "decreased")}** to **{volume}%**. {emoji}").ConfigureAwait(false);
+            await ReplyAsync($"{emoji} Volume {new MarkdownBuilder(volume > previous ? "increased" : "decreased").Bold()} " +
+                             $"to {new MarkdownBuilder($"{volume}%").Bold()} {emoji}").ConfigureAwait(false);
         }
 
         private async Task<VoteLavalinkPlayer> GetPlayerAsync(bool connectToVoiceChannel)
@@ -371,13 +415,13 @@ namespace Servo.Modules
             var user = Context.Guild.GetUser(Context.User.Id);
             if (!user.VoiceState.HasValue)
             {
-                await ReplyAsync("⚠️ You must be in a voice channel! ⚠️").ConfigureAwait(false);
+                await ReplyAsync($"⚠️ {new MarkdownBuilder("You must be in a voice channel!").Bold()} ⚠️").ConfigureAwait(false);
                 return null;
             }
 
             if (!connectToVoiceChannel)
             {
-                await ReplyAsync("⚠️ The bot is not in a voice channel! ⚠️").ConfigureAwait(false);
+                await ReplyAsync($"⚠️ {new MarkdownBuilder("The bot is not in a voice channel!").Bold()} ⚠️").ConfigureAwait(false);
                 return null;
             }
 
