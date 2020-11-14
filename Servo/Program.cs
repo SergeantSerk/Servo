@@ -7,9 +7,8 @@ namespace Servo
     {
         private static Entry entry;
 
-        public const ulong DeveloperId = 98486055170215936;
-
         public static bool QuitSignal = false;
+        public const ulong DeveloperId = 98486055170215936;
 
         public static void Main()
         {

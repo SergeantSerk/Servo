@@ -1,19 +1,19 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
-using Servo.Services;
-using Servo.Exceptions;
 using Discord.Net;
+using Discord.WebSocket;
 using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
 using Lavalink4NET.MemoryCache;
-using System.Net;
 using Lavalink4NET.Player;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Servo.Exceptions;
+using Servo.Services;
+using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Servo
 {
@@ -28,28 +28,17 @@ namespace Servo
 
         public async Task StartAsync()
         {
-            client = new DiscordSocketClient();
             config = BuildConfig();
+            client = new DiscordSocketClient();
 
             // Service initialisation
             services = ConfigureServices();
-
             services.GetRequiredService<LogService>();
             await services.GetRequiredService<CommandHandlingService>()
                           .InitializeAsync(config["prefix"], services)
                           .ConfigureAwait(false);
 
-            var token = config["token"];
-
-            if (token == null)
-            {
-                throw new MissingTokenException("Token for client login is missing from config or environment variable.");
-            }
-            else if (token.Length != 59)
-            {
-                throw new InvalidTokenException($"Token length is invalid (Expected 59, got {token.Length}) from config.");
-            }
-
+            string token = ParseToken(config);
             try
             {
                 await client.LoginAsync(TokenType.Bot, token).ConfigureAwait(false);
@@ -73,12 +62,7 @@ namespace Servo
 
         private ServiceProvider ConfigureServices()
         {
-            var ip = config["lavalink:host"];
-            var port = config["lavalink:port"];
-            if (!IPEndPoint.TryParse($"{ip}:{port}", out IPEndPoint result))
-            {
-                throw new InvalidJsonException("Invalid IP address or port number.");
-            }
+            var lavaConfig = BuildLavalinkConfig(config);
 
             return new ServiceCollection()
                 // Base
@@ -91,28 +75,60 @@ namespace Servo
                 // Extra
                 .AddSingleton(config)
                 // Lavalink
+                .AddSingleton<LavalinkSocket>()
                 .AddSingleton<IDiscordClientWrapper, DiscordClientWrapper>()
                 .AddSingleton<IAudioService, LavalinkNode>()
-                .AddSingleton(new LavalinkNodeOptions
-                {
-                    AllowResuming = true,
-                    DisconnectOnStop = true,
-                    Password = config["lavalink:password"],
-                    WebSocketUri = $"ws://{result.Address}:{result.Port}",
-                    RestUri = $"http://{result.Address}:{result.Port}",
-                })
+                .AddSingleton(lavaConfig)
                 // Caching
                 .AddSingleton<ILavalinkCache, LavalinkCache>()
                 .BuildServiceProvider();
         }
 
+        private LavalinkNodeOptions BuildLavalinkConfig(IConfiguration config)
+        {
+            var ip = config["lavalink:host"];
+            var port = config["lavalink:port"];
+            if (!IPEndPoint.TryParse($"{ip}:{port}", out IPEndPoint result))
+            {
+                throw new InvalidJsonException("Invalid IP address or port number.");
+            }
+
+            return new LavalinkNodeOptions
+            {
+                AllowResuming = true,
+                DisconnectOnStop = true,
+                Password = config["lavalink:password"],
+                WebSocketUri = $"ws://{result.Address}:{result.Port}",
+                RestUri = $"http://{result.Address}:{result.Port}",
+            };
+        }
+
         private IConfiguration BuildConfig()
         {
             // Try load config from JSON file
-            return new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("config.json")
-                .Build();
+            var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                                                   .AddJsonFile("config.json")
+                                                   .Build();
+
+            // Validate token by parsing it empty without keeping value
+            ParseToken(config);
+
+            return config;
+        }
+
+        private string ParseToken(IConfiguration config)
+        {
+            var token = config["token"];
+            if (token == null)
+            {
+                throw new MissingTokenException("Token for client login is missing from config or environment variable.");
+            }
+            else if (token.Length != 59)
+            {
+                throw new InvalidTokenException($"Token length is invalid (Expected 59, got {token.Length}) from config.");
+            }
+
+            return token;
         }
 
         public void Dispose()

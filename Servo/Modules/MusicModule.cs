@@ -1,10 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord.Commands;
+﻿using Discord.Commands;
 using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
 using Lavalink4NET.Player;
 using Lavalink4NET.Rest;
+using System;
+using System.Threading.Tasks;
 
 namespace Servo.Modules
 {
@@ -121,7 +121,7 @@ namespace Servo.Modules
                 return;
             }
 
-            if (loadInfo.LoadType == TrackLoadType.TrackLoaded || 
+            if (loadInfo.LoadType == TrackLoadType.TrackLoaded ||
                 loadInfo.LoadType == TrackLoadType.SearchResult)
             {
                 var track = tracks[0];
@@ -216,7 +216,7 @@ namespace Servo.Modules
                 message += $"{symbol}   **{i + 1}.** **{track.Title}** **[**`{track.Duration:hh\\:mm\\:ss}`**]**\n";
             }
 
-            if (max > player.Queue.Count)
+            if (player.Queue.Count > max)
             {
                 message += $"🎶 **And more queued up...** 🎶";
             }
@@ -375,22 +375,23 @@ namespace Servo.Modules
                 return;
             }
 
+            var previousTrack = player.CurrentTrack;
             var info = await player.VoteAsync(Context.Message.Author.Id).ConfigureAwait(false);
             if (info.WasAdded && !info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Vote skip was cast for **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Vote skip was cast for **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
             }
             else if (!info.WasAdded && info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Skipped track **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Skipped track **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
             }
             else if (info.WasAdded && info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Your vote was added and skipped **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Your vote skipped **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
             }
             else
             {
-                await ReplyAsync($"🗳 There was a problem voting for **{player.CurrentTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 There was a problem voting for **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
             }
         }
 

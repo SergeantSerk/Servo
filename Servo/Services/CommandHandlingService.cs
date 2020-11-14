@@ -1,12 +1,12 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Servo.TypeReaders;
 using Lavalink4NET;
 using Microsoft.Extensions.DependencyInjection;
+using Servo.TypeReaders;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Servo.Services
 {
