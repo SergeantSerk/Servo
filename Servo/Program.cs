@@ -8,6 +8,7 @@ namespace Servo
         private static Entry entry;
 
         public static bool QuitSignal = false;
+        public static bool RestartSignal = false;
         public const ulong DeveloperId = 98486055170215936;
 
         public static void Main()
@@ -16,17 +17,41 @@ namespace Servo
 
             try
             {
-                using (entry = new Entry())
+                while (true)
                 {
-                    entry.StartAsync().GetAwaiter().GetResult();
-
-                    while (entry.IsActive && !QuitSignal)
+                    using (entry = new Entry())
                     {
-                        Thread.Sleep(1000);
-                        continue;
+                        entry.StartAsync().GetAwaiter().GetResult();
+
+                        while (entry.IsActive && (!QuitSignal && !RestartSignal))
+                        {
+                            Thread.Sleep(1000);
+                            continue;
+                        }
+
+                        if (QuitSignal && !RestartSignal)
+                        {
+                            Console.WriteLine("\n" + (Console.Title = "Caught exit, quitting..."));
+                        }
+                        else if (RestartSignal && !QuitSignal)
+                        {
+                            Console.WriteLine("\n" + (Console.Title = "Caught restart, restarting..."));
+                        }
                     }
 
-                    Console.WriteLine("\n" + (Console.Title = "Caught exit, quitting..."));
+                    if (QuitSignal && !RestartSignal)
+                    {
+                        Console.WriteLine("\n" + (Console.Title = "Done, bye!"));
+                        QuitSignal = false;
+                        RestartSignal = false;
+                        break;
+                    }
+                    else if (RestartSignal && !QuitSignal)
+                    {
+                        Console.WriteLine("\n" + (Console.Title = "Restarting bot..."));
+                        QuitSignal = false;
+                        RestartSignal = false;
+                    }
                 }
             }
             catch (Exception e)

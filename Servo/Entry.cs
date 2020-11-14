@@ -147,11 +147,7 @@ namespace Servo
 
             if (client != null)
             {
-                if (client.LoginState == LoginState.LoggedIn || client.LoginState == LoginState.LoggingIn)
-                {
-                    client.StopAsync().GetAwaiter().GetResult();
-                }
-
+                client.StopAsync().Wait();
                 client.Dispose();
                 client = null;
             }

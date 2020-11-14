@@ -28,7 +28,7 @@ namespace Servo.Modules
             };
         }
 
-        [Command("disconnect", RunMode = RunMode.Async)]
+        [Command("disconnect", true, RunMode = RunMode.Async)]
         public async Task Disconnect()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -42,7 +42,7 @@ namespace Servo.Modules
         }
 
         [Alias("np")]
-        [Command("nowplaying", RunMode = RunMode.Async)]
+        [Command("nowplaying", true, RunMode = RunMode.Async)]
         public async Task NowPlaying()
         {
             await NowPlaying(true).ConfigureAwait(false);
@@ -83,7 +83,7 @@ namespace Servo.Modules
             await ReplyAsync($"{emoji} Now playing {message} 🎶").ConfigureAwait(false);
         }
 
-        [Command("pause", RunMode = RunMode.Async)]
+        [Command("pause", true, RunMode = RunMode.Async)]
         public async Task Pause()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -152,7 +152,7 @@ namespace Servo.Modules
         }
 
         [Alias("resume")]
-        [Command("play", RunMode = RunMode.Async)]
+        [Command("play", true, RunMode = RunMode.Async)]
         public async Task Play()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -181,7 +181,7 @@ namespace Servo.Modules
         }
 
         [Alias("q")]
-        [Command("queue", RunMode = RunMode.Async)]
+        [Command("queue", true, RunMode = RunMode.Async)]
         public async Task Queue()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -225,7 +225,7 @@ namespace Servo.Modules
         }
 
         [Alias("loop")]
-        [Command("repeat", RunMode = RunMode.Async)]
+        [Command("repeat", true, RunMode = RunMode.Async)]
         public async Task Repeat()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -251,7 +251,7 @@ namespace Servo.Modules
             }
         }
 
-        [Command("replay", RunMode = RunMode.Async)]
+        [Command("replay", true, RunMode = RunMode.Async)]
         public async Task Replay()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -340,7 +340,7 @@ namespace Servo.Modules
             await SeekBy(duration).ConfigureAwait(false);
         }
 
-        [Command("shuffle", RunMode = RunMode.Async)]
+        [Command("shuffle", true, RunMode = RunMode.Async)]
         public async Task Shuffle()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -360,7 +360,7 @@ namespace Servo.Modules
             }
         }
 
-        [Command("skip", RunMode = RunMode.Async)]
+        [Command("skip", true, RunMode = RunMode.Async)]
         public async Task Skip()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
@@ -375,23 +375,23 @@ namespace Servo.Modules
                 return;
             }
 
-            var previousTrack = player.CurrentTrack;
+            var title = player.CurrentTrack.Title;
             var info = await player.VoteAsync(Context.Message.Author.Id).ConfigureAwait(false);
             if (info.WasAdded && !info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Vote skip was cast for **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Vote skip was cast for **{title}**. 🗳").ConfigureAwait(false);
             }
             else if (!info.WasAdded && info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Skipped track **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Skipped track **{title}**. 🗳").ConfigureAwait(false);
             }
             else if (info.WasAdded && info.WasSkipped)
             {
-                await ReplyAsync($"🗳 Your vote skipped **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 Your vote skipped **{title}**. 🗳").ConfigureAwait(false);
             }
             else
             {
-                await ReplyAsync($"🗳 There was a problem voting for **{previousTrack.Title}**. 🗳").ConfigureAwait(false);
+                await ReplyAsync($"🗳 You already voted for **{title}**. 🗳").ConfigureAwait(false);
             }
         }
 
@@ -416,11 +416,12 @@ namespace Servo.Modules
                 return;
             }
 
+            var title = player.CurrentTrack.Title;
             await player.SkipAsync().ConfigureAwait(false);
-            await ReplyAsync($"⏭️ Skipping **{player.CurrentTrack.Title}**... ⏭️").ConfigureAwait(false);
+            await ReplyAsync($"⏭️ Skipping **{title}**... ⏭️").ConfigureAwait(false);
         }
 
-        [Command("stop", RunMode = RunMode.Async)]
+        [Command("stop", true, RunMode = RunMode.Async)]
         public async Task Stop()
         {
             var player = await GetPlayerAsync(false).ConfigureAwait(false);
